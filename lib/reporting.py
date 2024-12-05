@@ -1,7 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates. All Rights Reserved
 
 import collections
-
 import json
 import os
 
@@ -9,11 +8,12 @@ import tqdm
 
 from lib.query import Q
 
+
 def load_records(path):
     records = []
-    for i, subdir in tqdm.tqdm(list(enumerate(os.listdir(path))),
-                               ncols=80,
-                               leave=False):
+    for i, subdir in tqdm.tqdm(
+        list(enumerate(os.listdir(path))), ncols=80, leave=False
+    ):
         results_path = os.path.join(path, subdir, "results.jsonl")
         try:
             with open(results_path, "r") as f:
@@ -24,6 +24,7 @@ def load_records(path):
 
     return Q(records)
 
+
 def get_grouped_records(records):
     """Group records by (trial_seed, dataset, algorithm, test_env). Because
     records can have multiple test envs, a given record may appear in more than
@@ -32,11 +33,24 @@ def get_grouped_records(records):
     for r in records:
         for train_env in r["args"]["train_envs"]:
             for test_env in r["args"]["test_envs"]:
-                group = (r["args"]["trial_seed"],
+                group = (
+                    r["args"]["trial_seed"],
                     r["args"]["dataset"],
                     r["args"]["algorithm"],
                     train_env,
-                    test_env)
+                    test_env,
+                )
                 result[group].append(r)
-    return Q([{"trial_seed": t, "dataset": d, "algorithm": a, "train_env":es, "test_env": et,
-        "records": Q(r)} for (t,d,a,es,et),r in result.items()])
+    return Q(
+        [
+            {
+                "trial_seed": t,
+                "dataset": d,
+                "algorithm": a,
+                "train_env": es,
+                "test_env": et,
+                "records": Q(r),
+            }
+            for (t, d, a, es, et), r in result.items()
+        ]
+    )
